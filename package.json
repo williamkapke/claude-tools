@@ -1,0 +1,27 @@
+{
+  "name": "@twistedkap/claude-tools",
+  "version": "1.0.0",
+  "description": "Configuration tools for Claude CLI",
+  "type": "module",
+  "bin": {
+    "claude-tools": "./setup.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "claude",
+    "cli",
+    "tools",
+    "configuration"
+  ],
+  "author": "kap",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/williamkapke/claude-tools.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
