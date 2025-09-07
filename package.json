@@ -1,6 +1,6 @@
 {
   "name": "@twistedkap/claude-tools",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Configuration tools for Claude CLI",
   "type": "module",
   "bin": {
@@ -23,5 +23,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
