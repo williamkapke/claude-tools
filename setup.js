@@ -133,8 +133,21 @@ async function setupClaudeSettings() {
   console.log('\nConfiguring Claude rules...');
   await ensureDir(CLAUDE_DIR);
   
-  // Get the path to rule-manager.js (in the same directory as this script)
-  const ruleManagerPath = path.join(__dirname, 'rule-manager.js');
+  // Copy rule-manager.js to Claude directory
+  const sourceRuleManager = path.join(__dirname, 'rule-manager.js');
+  const destRuleManager = path.join(CLAUDE_DIR, 'rule-manager.js');
+  
+  try {
+    const ruleManagerContent = await fs.readFile(sourceRuleManager, 'utf-8');
+    await fs.writeFile(destRuleManager, ruleManagerContent);
+    await fs.chmod(destRuleManager, 0o755);
+    console.log(`  ✓ Copied rule-manager.js to ${destRuleManager}`);
+  } catch (error) {
+    console.error(`  ✗ Failed to copy rule-manager.js: ${error.message}`);
+  }
+  
+  // Use the destination path for hooks
+  const ruleManagerPath = destRuleManager;
   
   const settings = {
     permissions: {
@@ -257,6 +270,13 @@ async function setupClaudeSettings() {
 async function removeClaudeSettings() {
   console.log('\nRemoving Claude rules...');
   
+  // Remove rule-manager.js file
+  const ruleManagerPath = path.join(CLAUDE_DIR, 'rule-manager.js');
+  if (await fileExists(ruleManagerPath)) {
+    await fs.unlink(ruleManagerPath);
+    console.log(`  ✓ Removed rule-manager.js`);
+  }
+  
   if (!await fileExists(SETTINGS_FILE)) {
     console.log(`  ⚠ No settings.json found`);
     return;
@@ -267,7 +287,6 @@ async function removeClaudeSettings() {
     const settings = JSON.parse(content);
     
     // Remove rule-manager.js hooks
-    const ruleManagerPath = path.join(__dirname, 'rule-manager.js');
     
     for (const hookType of Object.keys(settings.hooks || {})) {
       if (settings.hooks[hookType] && Array.isArray(settings.hooks[hookType])) {
