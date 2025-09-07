@@ -1,11 +1,16 @@
 {
   "name": "@twistedkap/claude-tools",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Configuration tools for Claude CLI",
   "type": "module",
   "bin": {
     "claude-tools": "./setup.js"
   },
+  "files": [
+    "setup.js",
+    "rule-manager.js",
+    "sounds/**/*.mp3"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

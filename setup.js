@@ -12,22 +12,16 @@ const CLAUDE_DIR = path.join(os.homedir(), '.claude');
 const SETTINGS_FILE = path.join(CLAUDE_DIR, 'settings.json');
 const GIT_HOOKS_DIR = path.join(os.homedir(), '.git-templates', 'hooks');
 
-// Sound file URLs
+// Sound files bundled with the package
 const SOUNDS = {
-  notification: {
-    url: 'https://notificationsounds.com/storage/sounds/file-sounds-1138-hurry.mp3',
-    filename: 'notification.mp3'
-  },
-  stop: {
-    url: 'https://notificationsounds.com/storage/sounds/file-sounds-941-achievement.mp3',
-    filename: 'stop.mp3'
-  }
+  notification: 'notification.mp3',
+  stop: 'stop.mp3'
 };
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 const isUninstall = args.includes('uninstall');
-const installSounds = isUninstall ? false : (args.length === 0 || args.includes('-sounds'));
+const shouldInstallSounds = isUninstall ? false : (args.length === 0 || args.includes('-sounds'));
 const installRules = isUninstall ? false : (args.length === 0 || args.includes('-rules'));
 const installGitHook = isUninstall ? false : (args.length === 0 || args.includes('-git-precommit'));
 const showHelp = args.includes('-h') || args.includes('--help');
@@ -45,36 +39,34 @@ async function fileExists(filePath) {
   }
 }
 
-async function downloadFile(url, destPath) {
-  console.log(`Downloading ${path.basename(destPath)}...`);
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to download ${url}: ${response.statusText}`);
-  }
-  const buffer = await response.arrayBuffer();
-  await fs.writeFile(destPath, Buffer.from(buffer));
-  console.log(`  ✓ Downloaded to ${destPath}`);
+async function copyFile(sourcePath, destPath) {
+  console.log(`Copying ${path.basename(destPath)}...`);
+  await fs.copyFile(sourcePath, destPath);
+  console.log(`  ✓ Copied to ${destPath}`);
 }
 
-async function downloadSounds() {
-  console.log('\nDownloading notification sounds...');
-  for (const [key, sound] of Object.entries(SOUNDS)) {
-    const destPath = path.join(CLAUDE_DIR, sound.filename);
+async function installSounds() {
+  console.log('\nInstalling notification sounds...');
+  const soundsDir = path.join(__dirname, 'sounds');
+  
+  for (const [key, filename] of Object.entries(SOUNDS)) {
+    const sourcePath = path.join(soundsDir, filename);
+    const destPath = path.join(CLAUDE_DIR, filename);
     try {
-      await downloadFile(sound.url, destPath);
+      await copyFile(sourcePath, destPath);
     } catch (error) {
-      console.error(`  ✗ Failed to download ${key} sound: ${error.message}`);
+      console.error(`  ✗ Failed to install ${key} sound: ${error.message}`);
     }
   }
 }
 
 async function removeSounds() {
   console.log('\nRemoving notification sounds...');
-  for (const sound of Object.values(SOUNDS)) {
-    const soundPath = path.join(CLAUDE_DIR, sound.filename);
+  for (const filename of Object.values(SOUNDS)) {
+    const soundPath = path.join(CLAUDE_DIR, filename);
     if (await fileExists(soundPath)) {
       await fs.unlink(soundPath);
-      console.log(`  ✓ Removed ${sound.filename}`);
+      console.log(`  ✓ Removed ${filename}`);
     }
   }
 }
@@ -379,7 +371,7 @@ async function main() {
   if (args.length > 0) {
     console.log('Installing:');
     if (installRules) console.log('  • Claude rules');
-    if (installSounds) console.log('  • Notification sounds');
+    if (shouldInstallSounds) console.log('  • Notification sounds');
     if (installGitHook) console.log('  • Git commit-msg hook');
     console.log('');
   } else {
@@ -392,7 +384,7 @@ async function main() {
   
   try {
     if (installRules) await setupClaudeSettings();
-    if (installSounds) await downloadSounds();
+    if (shouldInstallSounds) await installSounds();
     if (installGitHook) await setupGitHooks();
     
     console.log('\n✅ Setup complete!');
